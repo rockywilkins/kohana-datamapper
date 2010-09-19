@@ -242,7 +242,7 @@ class DataMapper
 	 */
 	public function update($entity)
 	{
-		$data = $entity->getData();
+		$data = $entity->getModifiedData();
 		if (count($data))
 		{
 			$query = DB::update($this->table);

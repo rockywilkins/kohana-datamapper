@@ -13,6 +13,12 @@ class DataMapper_Entity
 
 	public function __construct($data = null)
 	{
+		if ($data !== null)
+		{
+			$this->setData($data);
+		}
+
+		$this->loaded = true;
 	}
 
 //////////////////////////////
@@ -27,6 +33,10 @@ class DataMapper_Entity
 	 */
 	public function setData($data)
 	{
+		foreach ($data as $key => $value)
+		{
+			$this->$key = $value;
+		}
 	}
 
 	/**
@@ -36,7 +46,7 @@ class DataMapper_Entity
 	 */
 	public function getData()
 	{
-		return $this->data;
+		return array_merge($this->data, $this->modified);
 	}
 
 	/**
@@ -50,19 +60,13 @@ class DataMapper_Entity
 	}
 
 	/**
-	 * Get the data of this entity as an array
-	 */
-	public function toArray()
-	{
-	}
-
-	/**
 	 * Get the data of this entity as a JSON string
 	 *
 	 * @return  string
 	 */
 	public function toJSON()
 	{
+		return json_encode($this->getData());
 	}
 
 //////////////////////////////
@@ -74,13 +78,37 @@ class DataMapper_Entity
 		return ($this->$key !== null) ? true : false;
 	}
 
+	/**
+	 * Set entity data
+	 */
 	public function __set($key, $value)
 	{
-		$this->data[$key] = $value;
+		if ($this->loaded)
+		{
+			$this->modified[$key] = $value;
+		}
+		else
+		{
+			$this->data[$key] = $value;
+		}
 	}
 
+	/**
+	 * Get entity data
+	 */
 	public function __get($key)
 	{
-		return array_key_exists($key, $this->data) ? $this->data[$key] : null;
+		if (array_key_exists($key, $this->modified))
+		{
+			return $this->modified[$key];
+		}
+		else if (array_key_exists($key, $this->data))
+		{
+			return $this->data[$key];
+		}
+		else
+		{
+			return null;
+		}
 	}
 }
