@@ -36,16 +36,22 @@ class DataMapper
 	 */
 	public function loadFields()
 	{
+		// Get only the fields from the class instance, not its descendants
 		$getFields = create_function('$obj', 'return get_object_vars($obj);');
 		$fields = $getFields($this);
 
+		// Field defaults
 		$defaults = array(
 			'primary' => false
 		);
 
+		// Go through and set up each field
 		foreach ($fields as $name => $options)
 		{
+			// Merge the defaults
 			$options = array_merge($defaults, $options);
+			
+			// Is this the primary field?
 			if ($options['primary'] === true)
 			{
 				$this->primaryKeyField = $name;
@@ -119,6 +125,7 @@ class DataMapper
 	 */
 	public function get($primaryKeyValue)
 	{
+		// Get only one record using the primary key
 		return $this->getOne(array($this->getPrimaryKeyField(), '=', $primaryKeyValue));
 	}
 
@@ -130,25 +137,29 @@ class DataMapper
 	 */
 	public function getOne($query)
 	{
+		// Check if database query has been given
 		if (!$query instanceof Kohana_Database_Query)
 		{
 			$condition = $query;
 
+			// Query not given so create one
 			$query = DB::select();
 			$query->where($condition[0], $condition[1], $condition[2]);
 		}
-		$query->from($this->table);
-		$query->limit(1);
-		$query->as_object($this->entityClass);
+		$query->from($this->table);            // Use the specified entity table
+		$query->limit(1);                      // Limit to only 1 record
+		$query->as_object($this->entityClass); // Use the defined entity class
+		$result = $query->execute();           // Execute the query
 
-		$result = $query->execute();
-
+		// Did we get a result?
 		if ($result->count() === 0)
 		{
+			// No results
 			throw new Kohana_Exception('No records found');
 		}
 		else
 		{
+			// Return the first (and only) row
 			return $result[0];
 		}
 	}
