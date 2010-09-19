@@ -55,9 +55,22 @@ class GetTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testGetAll()
 	{
-		$items = $this->mapper->getAll();
+		$items = $this->mapper->getAll(array('id', '<=', 15));
 
-		$this->assertTrue($items->count() == 100);
+		$this->assertTrue($items->count() == 15);
+	}
+	
+	/**
+	 * Test the save method
+	 */
+	public function testSave()
+	{
+		$item = $this->mapper->get(5);
+		$item->title = 'Title 5 changed';
+		$this->mapper->save($item);
+		
+		$item = $this->mapper->get(5);
+		$this->assertTrue($item->title == 'Title 5 changed');
 	}
 }
 
