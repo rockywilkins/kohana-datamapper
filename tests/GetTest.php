@@ -72,6 +72,56 @@ class GetTest extends PHPUnit_Framework_TestCase
 		$item = $this->mapper->get(5);
 		$this->assertTrue($item->title == 'Title 5 changed');
 	}
+
+	/**
+	 * Test the delete method
+	 */
+	public function testDelete()
+	{
+		$item = $this->mapper->get(5);
+		$this->mapper->delete($item);
+		
+		try
+		{
+			$item = $this->mapper->get(5);
+			$this->assertTrue(false);
+		}
+		catch (DataMapper_Exception $e)
+		{
+			$this->assertTrue(true);
+		}
+	}
+
+	public function testOtherMethods()
+	{
+		// Test fieldExists
+		$this->assertTrue($this->mapper->fieldExists('name'));
+		$this->assertTrue($this->mapper->fieldExists('title'));
+		$this->assertTrue($this->mapper->fieldExists('content'));
+
+		// Test getPrimaryKeyField
+		$this->assertTrue($this->mapper->getPrimaryKeyField() == 'id');
+
+		// Test getFields
+		$this->assertEquals($this->mapper->getFields(),
+			array(
+				'id'      => array(),
+				'name'    => array(),
+				'title'   => array(),
+				'content' => array()
+			)
+		);
+	}
+
+	public function testValidate()
+	{
+		$item = $this->mapper->getEntity();
+		$item->name    = 'Test';
+		$item->title   = 'Test title';
+		$item->content = 'Test content';
+		
+		$this->assertTrue($this->mapper->validate($item));
+	}
 }
 
 class Mapper_Test extends DataMapper
@@ -79,7 +129,7 @@ class Mapper_Test extends DataMapper
 	protected $table = 'tests';
 
 	public $id      = array('primary' => true);
-	public $name    = array();
+	public $name    = array('rules' => array('not_empty' => null));
 	public $title   = array();
 	public $content = array();
 }
