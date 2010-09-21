@@ -59,7 +59,7 @@ class GetTest extends PHPUnit_Framework_TestCase
 
 		$this->assertTrue($items->count() == 15);
 	}
-	
+
 	/**
 	 * Test the save method
 	 */
@@ -68,7 +68,7 @@ class GetTest extends PHPUnit_Framework_TestCase
 		$item = $this->mapper->get(5);
 		$item->title = 'Title 5 changed';
 		$this->mapper->save($item);
-		
+
 		$item = $this->mapper->get(5);
 		$this->assertTrue($item->title == 'Title 5 changed');
 	}
@@ -80,7 +80,7 @@ class GetTest extends PHPUnit_Framework_TestCase
 	{
 		$item = $this->mapper->get(5);
 		$this->mapper->delete($item);
-		
+
 		try
 		{
 			$item = $this->mapper->get(5);
@@ -119,7 +119,7 @@ class GetTest extends PHPUnit_Framework_TestCase
 		$item->name    = 'Test';
 		$item->title   = 'Test title';
 		$item->content = 'Test content';
-		
+
 		$this->assertTrue($this->mapper->validate($item));
 	}
 }

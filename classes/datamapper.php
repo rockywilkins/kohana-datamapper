@@ -50,11 +50,18 @@ class DataMapper
 		{
 			// Merge the defaults
 			$options = array_merge($defaults, $options);
-			
+
 			// Is this the primary field?
 			if ($options['primary'] === true)
 			{
 				$this->primaryKeyField = $name;
+			}
+
+			// Is this a relation?
+			if (isset($options['relation']))
+			{
+				$this->relations[$name] = $options['relation'];
+				continue;
 			}
 
 			$this->fields[$name] = array();
@@ -69,6 +76,16 @@ class DataMapper
 	public function getFields()
 	{
 		return $this->fields;
+	}
+
+	/**
+	 * Get all the defined relations
+	 *
+	 * @return  array
+	 */
+	public function getRelations()
+	{
+		return $this->relations;
 	}
 
 	/**
