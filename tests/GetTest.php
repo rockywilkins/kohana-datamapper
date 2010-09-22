@@ -12,7 +12,7 @@ class GetTest extends PHPUnit_Framework_TestCase
 
 		for ($i = 1; $i <= 100; $i++)
 		{
-			$entity = $this->mapper->getEntity();
+			$entity = $this->mapper->getEmpty();
 			$entity->name = 'Name ' . $i;
 			$entity->title = 'Title ' . $i;
 			$entity->content = 'Content ' . $i;
@@ -115,7 +115,7 @@ class GetTest extends PHPUnit_Framework_TestCase
 
 	public function testValidate()
 	{
-		$item = $this->mapper->getEntity();
+		$item = $this->mapper->getEmpty();
 		$item->name    = 'Test';
 		$item->title   = 'Test title';
 		$item->content = 'Test content';

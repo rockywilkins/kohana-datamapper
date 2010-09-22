@@ -25,6 +25,7 @@ class DataMapper
 		$this->loadFields();
 	}
 
+
 //////////////////////////////
 ///// Field Methods
 //////////////////////////////
@@ -79,16 +80,6 @@ class DataMapper
 	}
 
 	/**
-	 * Get all the defined relations
-	 *
-	 * @return  array
-	 */
-	public function getRelations()
-	{
-		return $this->relations;
-	}
-
-	/**
 	 * Check if a field exists
 	 *
 	 * @param   string  field name
@@ -120,6 +111,7 @@ class DataMapper
 		return $this->primaryKeyField;
 	}
 
+
 //////////////////////////////
 ///// Data fetch/push Methods
 //////////////////////////////
@@ -129,7 +121,7 @@ class DataMapper
 	 *
 	 * @return  DataMapper_Entity
 	 */
-	public function getEntity()
+	public function getEmpty()
 	{
 		return new $this->entityClass();
 	}
@@ -331,6 +323,40 @@ class DataMapper
 
 		// Execute the query
 		return (bool)$query->execute();
+	}
+
+
+//////////////////////////////
+///// Relation Methods
+//////////////////////////////
+
+	/**
+	 * Get all the defined relations
+	 *
+	 * @return  array
+	 */
+	public function getRelations()
+	{
+		return $this->relations;
+	}
+
+	/**
+	 * Get
+	 */
+	public function loadRelations(DataMapper_Entity $entity)
+	{
+		foreach ($this->relations as $name => $options)
+		{
+			$mapper = isset($options['mapper']) ? $options['mapper'] : false;
+			if (!$mapper)
+			{
+				throw new DataMapper_Exception('Relationship mapper for ' . $name . ' has not been defined');
+			}
+			
+			$mapper = DataMapper::instance($mapper);
+			
+			
+		}
 	}
 
 //////////////////////////////
