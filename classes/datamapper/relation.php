@@ -8,13 +8,33 @@
 abstract class DataMapper_Relation
 {
 	protected $mapper;
+	protected $conditions;
+	protected $results;
 
-	public function __construct(DataMapper $mapper)
+	public function __construct(DataMapper $mapper, array $conditions)
 	{
-		$this->mapper = $mapper;
+		$this->mapper     = $mapper;
+		$this->conditions = $conditions;
 	}
-	
-	public function getAll()
+
+	public function getMapper()
 	{
+		return $this->mapper;
 	}
+
+	public function getConditions()
+	{
+		return $this->conditions;
+	}
+
+	public function getResults()
+	{
+		if (!$this->results)
+		{
+			$this->results = $this->getAll();
+		}
+		return $this->results;
+	}
+
+	abstract public function getAll();
 }

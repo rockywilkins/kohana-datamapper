@@ -43,7 +43,8 @@ class DataMapper
 
 		// Field defaults
 		$defaults = array(
-			'primary' => false
+			'primary'  => false,
+			'relation' => false
 		);
 
 		// Go through and set up each field
@@ -59,7 +60,7 @@ class DataMapper
 			}
 
 			// Is this a relation?
-			if (isset($options['relation']))
+			if ($options['relation'] !== false)
 			{
 				$this->relations[$name] = $options['relation'];
 				continue;
@@ -169,7 +170,7 @@ class DataMapper
 		else
 		{
 			// Return the first (and only) row
-			return $result[0];
+			return $this->loadRelations($result[0]);
 		}
 	}
 
@@ -341,22 +342,30 @@ class DataMapper
 	}
 
 	/**
-	 * Get
+	 * Load all related fields with relation classes
+	 *
+	 * @param   DataMapper_Entity  entity to load relations for
+	 * @return  DataMapper_Entity
 	 */
 	public function loadRelations(DataMapper_Entity $entity)
 	{
+		// Go through each relation
 		foreach ($this->relations as $name => $options)
 		{
+			// Get the name of the related mapper
 			$mapper = isset($options['mapper']) ? $options['mapper'] : false;
 			if (!$mapper)
 			{
 				throw new DataMapper_Exception('Relationship mapper for ' . $name . ' has not been defined');
 			}
-			
 			$mapper = DataMapper::instance($mapper);
-			
-			
+
+			// Create instance of relation
+			$relationClass = 'DataMapper_Relation_' . $options['relation'];
+			$entity->$name = new $relationClass($mapper, $options['where']);
 		}
+
+		return $entity;
 	}
 
 //////////////////////////////
