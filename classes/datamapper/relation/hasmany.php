@@ -9,7 +9,7 @@ class DataMapper_Relation_HasMany extends DataMapper_Relation implements Countab
 {
 	public function getAll()
 	{
-		return $this->getOne();
+		return $this->mapper->getAll();
 	}
 
 	public function getOne()
@@ -19,10 +19,13 @@ class DataMapper_Relation_HasMany extends DataMapper_Relation implements Countab
 
 	public function count()
 	{
+		return count($this->getResults());
 	}
 
 	public function getIterator()
 	{
+		$data = $this->getResults();
+		return $data ? $data : array();
 	}
 
 
@@ -32,17 +35,33 @@ class DataMapper_Relation_HasMany extends DataMapper_Relation implements Countab
 
 	public function offsetExists($key)
 	{
+		$this->getResults();
+		return isset($this->results[$key]);
 	}
 
 	public function offsetGet($key)
 	{
+		$this->getResults();
+		return $this->results[$key];
 	}
 
 	public function offsetSet($key, $value)
 	{
+		$this->getResults();
+
+		if($key === null)
+		{
+			return $this->results[] = $value;
+		}
+		else
+		{
+			return $this->results[$key] = $value;
+		}
 	}
 
 	public function offsetUnset($key)
 	{
+		$this->getResults();
+		unset($this->results[$key]);
 	}
 }
