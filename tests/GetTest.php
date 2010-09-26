@@ -27,6 +27,8 @@ class GetTest extends PHPUnit_Framework_TestCase
 	public function tearDown()
 	{
 		DB::query(NULL, 'TRUNCATE TABLE tests')->execute();
+		DB::query(NULL, 'TRUNCATE TABLE files')->execute();
+		DB::query(NULL, 'TRUNCATE TABLE images')->execute();
 	}
 
 	/**
@@ -57,7 +59,7 @@ class GetTest extends PHPUnit_Framework_TestCase
 	{
 		$items = $this->mapper->getAll(array('id', '<=', 15));
 
-		$this->assertTrue($items->count() == 15);
+		$this->assertTrue(count($items) == 15);
 	}
 
 	/**
@@ -81,15 +83,8 @@ class GetTest extends PHPUnit_Framework_TestCase
 		$item = $this->mapper->get(5);
 		$this->mapper->delete($item);
 
-		try
-		{
-			$item = $this->mapper->get(5);
-			$this->assertTrue(false);
-		}
-		catch (DataMapper_Exception $e)
-		{
-			$this->assertTrue(true);
-		}
+		$item = $this->mapper->get(5);
+		$this->assertTrue($item === false);
 	}
 
 	public function testOtherMethods()
@@ -108,7 +103,8 @@ class GetTest extends PHPUnit_Framework_TestCase
 				'id'      => array(),
 				'name'    => array(),
 				'title'   => array(),
-				'content' => array()
+				'content' => array(),
+				'file_id' => array()
 			)
 		);
 	}
@@ -122,6 +118,31 @@ class GetTest extends PHPUnit_Framework_TestCase
 
 		$this->assertTrue($this->mapper->validate($item));
 	}
+
+	public function testRelations()
+	{
+		$test = $this->mapper->getEmpty();
+		$test->name    = 'Test';
+		$test->title   = 'Test title';
+		$test->content = 'Test content';
+
+		$fileMapper = DataMapper::instance('file');
+		$file = $fileMapper->getEmpty();
+		$file->name = 'Test';
+		$fileMapper->save($file);
+
+		$imageMapper = DataMapper::instance('image');
+		$image = $imageMapper->getEmpty();
+		$test->images[] = $image;
+
+		$test->file_id = $file->id;
+		$this->mapper->save($test);
+
+		$newTest = $this->mapper->get($test->id);
+		$this->assertTrue($newTest->id == $test->id);
+		$this->assertTrue($newTest->file->id == $file->id);
+		$this->assertTrue(count($newTest->images) == 1);
+	}
 }
 
 class Mapper_Test extends DataMapper
@@ -132,4 +153,34 @@ class Mapper_Test extends DataMapper
 	public $name    = array('rules' => array('not_empty' => null));
 	public $title   = array();
 	public $content = array();
+	public $file_id = array();
+
+	public $file = array(
+		'relation' => 'hasone',
+		'mapper'   => 'file',
+		'where'    => array('id', '=', 'file_id')
+	);
+
+	public $images = array(
+		'relation' => 'hasmany',
+		'mapper'   => 'image',
+		'where'    => array('test_id', '=', 'id')
+	);
+}
+
+class Mapper_File extends DataMapper
+{
+	protected $table = 'files';
+
+	public $id   = array('primary' => true);
+	public $name = array('rules' => array('not_empty' => null));
+}
+
+class Mapper_Image extends DataMapper
+{
+	protected $table = 'images';
+
+	public $id      = array('primary' => true);
+	public $test_id = array();
+	public $name    = array('rules' => array('not_empty' => null));
 }

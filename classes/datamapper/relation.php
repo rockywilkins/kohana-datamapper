@@ -8,25 +8,42 @@
 abstract class DataMapper_Relation
 {
 	protected $mapper;
-	protected $conditions;
-	protected $results;
+	protected $conditions = array();
+	protected $options = array();
+	protected $results = array();
 
-	public function __construct(DataMapper $mapper, array $conditions)
+	public function __construct(DataMapper $mapper, array $conditions, array $options)
 	{
 		$this->mapper     = $mapper;
 		$this->conditions = $conditions;
+		$this->options    = $options;
 	}
 
+	/**
+	 * Get the datamapper for this relation
+	 *
+	 * @return  DataMapper
+	 */
 	public function getMapper()
 	{
 		return $this->mapper;
 	}
 
+	/**
+	 * Get the conditions for this relation
+	 *
+	 * @return  array
+	 */
 	public function getConditions()
 	{
-		return $this->conditions;
+		return $this->options['where'];
 	}
 
+	/**
+	 * Get the database results for this relation
+	 *
+	 * @return  array
+	 */
 	public function getResults()
 	{
 		if (!$this->results)
@@ -37,4 +54,12 @@ abstract class DataMapper_Relation
 	}
 
 	abstract public function getAll();
+
+	public function __toString()
+	{
+		// Load related records for current row
+		//$success = $this->getResults();
+		$success = true;
+		return $success ? '1' : '0';
+	}
 }

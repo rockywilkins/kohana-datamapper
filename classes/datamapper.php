@@ -62,7 +62,7 @@ class DataMapper
 			// Is this a relation?
 			if ($options['relation'] !== false)
 			{
-				$this->relations[$name] = $options['relation'];
+				$this->relations[$name] = $options;
 				continue;
 			}
 
@@ -124,7 +124,8 @@ class DataMapper
 	 */
 	public function getEmpty()
 	{
-		return new $this->entityClass();
+		$entity = new $this->entityClass();
+		return $this->loadRelations($entity);
 	}
 
 	/**
@@ -150,11 +151,8 @@ class DataMapper
 		// Check if database query has been given
 		if (!$query instanceof Kohana_Database_Query)
 		{
-			$condition = $query;
-
 			// Query not given so create one
-			$query = DB::select();
-			$query->where($condition[0], $condition[1], $condition[2]);
+			$query = $this->createQuery($query);
 		}
 		$query->from($this->table);            // Use the specified entity table
 		$query->limit(1);                      // Limit to only 1 record
@@ -164,8 +162,8 @@ class DataMapper
 		// Did we get a result?
 		if ($result->count() === 0)
 		{
-			// No results
-			throw new DataMapper_Exception('No records found');
+			// No result
+			return false;
 		}
 		else
 		{
@@ -185,29 +183,24 @@ class DataMapper
 		// Check if database query has been given
 		if (!$query instanceof Kohana_Database_Query)
 		{
-			$conditions = $query;
-
 			// Query not given so create one
-			$query = DB::select();
-			if ($conditions !== null)
-			{
-				$query->where($conditions[0], $conditions[1], $conditions[2]);
-			}
+			$query = $this->createQuery($query);
 		}
 		$query->from($this->table);            // Use the specified entity table
 		$query->as_object($this->entityClass); // Use the defined entity class
 		$result = $query->execute();           // Execute the query
 
-		if ($result->count() === 0)
+		if ($result->count() > 0)
 		{
-			// No results
-			throw new DataMapper_Exception('No records found');
+			// Load the relations for each entity
+			foreach ($result as $entity)
+			{
+				$this->loadRelations($entity);
+			}
 		}
-		else
-		{
-			// Return all the results
-			return $result;
-		}
+
+		// Return all the results as an array of entities
+		return $result->as_array();
 	}
 
 	/**
@@ -256,20 +249,46 @@ class DataMapper
 	 */
 	public function insert($entity)
 	{
-		$data = $entity->getData();
+		$entityData = $entity->getData();
 		// Make sure we have some data to insert
-		if (count($data))
+		if (count($entityData))
 		{
-			// Create the database query and execute
-			$query = DB::insert($this->table, array_keys($data));
-			$query->values(array_values($data));
-			$result = $query->execute();
+			// Get the data for the defined fields only
+			$data = array();
+			foreach ($entityData as $field => $value)
+			{
+				if ($this->fieldExists($field))
+				{
+					$data[$field] = $value;
+				}
+			}
 
-			// Return the result
-			return (bool)count($result);
+			if (count($data))
+			{
+				// Create the database query and execute
+				$query = DB::insert($this->table, array_keys($data));
+				$query->values(array_values($data));
+				$result = $query->execute();
+
+				// Set the primary key
+				$primaryKeyField = $this->getPrimaryKeyField();
+				$entity->$primaryKeyField = $result[0];
+
+				// Get the result
+				$result = (bool)count($result);
+
+				// Save relations
+				if ($result)
+				{
+					$this->saveRelations($entity);
+				}
+
+				return $result;
+			}
 		}
 
-		throw new DataMapper_Exception('No data to insert');
+		// Nothing got inserted
+		return false;
 	}
 
 	/**
@@ -280,20 +299,37 @@ class DataMapper
 	 */
 	public function update($entity)
 	{
-		$data = $entity->getModifiedData();
+		$entityData = $entity->getModifiedData();
 		// Make sure we have some data to update
-		if (count($data))
+		if (count($entityData))
 		{
-			// Create the database query and execute
-			$query = DB::update($this->table);
-			$query->set($data);
-			$result = $query->execute();
+			$data = array();
+			foreach ($entityData as $field => $value)
+			{
+				if ($this->fieldExists($field))
+				{
+					$data[$field] = $value;
+				}
+			}
 
-			// Return the result
-			return (bool)count($result);
+			if (count($data))
+			{
+				// Create the database query and execute
+				$query = DB::update($this->table);
+				$query->set($data);
+				$result = $query->execute();
+
+				// Get the result
+				$result = (bool)count($result);
+
+				$this->saveRelations($entity);
+
+				return $result;
+			}
 		}
 
-		throw new DataMapper_Exception('No data to insert');
+		return true;
+		throw new DataMapper_Exception('No data to update');
 	}
 
 	/**
@@ -326,6 +362,44 @@ class DataMapper
 		return (bool)$query->execute();
 	}
 
+	/**
+	 * Create a database query from where conditions
+	 *
+	 * @param   array  where conditions
+	 * @return  Database_Query_Builder_Select
+	 */
+	protected function createQuery(array $conditions)
+	{
+		// Create new query
+		$query = DB::select();
+
+		if (isset($conditions[0]))
+		{
+			if (is_array($conditions[0]))
+			{
+				// Array of arrays
+				foreach ($conditions as $condition)
+				{
+					$query->where($condition[0], $condition[1], $condition[2]);
+				}
+			}
+			else
+			{
+				// Single array
+				$query->where($conditions[0], $conditions[1], $conditions[2]);
+			}
+		}
+		else
+		{
+			// Associative array
+			foreach ($conditions as $field => $value)
+			{
+				$query->where($field, '=', $value);
+			}
+		}
+
+		return $query;
+	}
 
 //////////////////////////////
 ///// Relation Methods
@@ -360,9 +434,75 @@ class DataMapper
 			}
 			$mapper = DataMapper::instance($mapper);
 
-			// Create instance of relation
+			// Get relation class name
 			$relationClass = 'DataMapper_Relation_' . $options['relation'];
-			$entity->$name = new $relationClass($mapper, $options['where']);
+
+			// Remove unneeded options
+			unset($options['mapper']);
+			unset($options['relation']);
+
+			// Load the values into the relation wheres
+			$where = array();
+			if (isset($options['where']))
+			{
+				$where = $options['where'];
+				unset($options['where']);
+
+				if (isset($where[0]))
+				{
+					if (is_array($where[0]))
+					{
+						// Array of arrays
+						foreach ($where as $condition)
+						{
+							$field        = $condition[2];
+							$condition[2] = $entity->$field;
+						}
+					}
+					else
+					{
+						// Single array
+						$field = $where[2];
+						$where[2] = $entity->$field;
+					}
+				}
+				else
+				{
+					// Associative array
+					foreach ($where as $field => $value)
+					{
+						$where[$field] = $entity->$value;
+					}
+				}
+			}
+
+			// Create instance of relation
+			$entity->$name = new $relationClass($mapper, $where, $options);
+		}
+
+		return $entity;
+	}
+
+	/**
+	 * Save all the relations for an entity
+	 *
+	 * @param   DataMapper_Entity  entity to save relations for
+	 * @return  DataMapper_Entity
+	 */
+	public function saveRelations(DataMapper_Entity $entity)
+	{
+		// Go through each relation
+		foreach ($this->relations as $name => $options)
+		{
+			$relation        = $entity->$name;
+			$relatedMapper   = $relation->getMapper();
+			$relatedEntities = $relation->getAll();
+
+			// Save each related entity
+			foreach ($relatedEntities as $relatedEntity)
+			{
+				$relatedMapper->save($relatedEntity);
+			}
 		}
 
 		return $entity;

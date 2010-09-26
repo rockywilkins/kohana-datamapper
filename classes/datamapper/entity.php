@@ -21,6 +21,17 @@ class DataMapper_Entity
 		$this->loaded = true;
 	}
 
+	/**
+	 * Set the loaded status of this entity
+	 *
+	 * @param   bool  loaded status
+	 * @return  void
+	 */
+	public function setLoaded($loaded = true)
+	{
+		$this->loaded = (bool) $loaded;
+	}
+
 //////////////////////////////
 ///// Data Methods
 //////////////////////////////

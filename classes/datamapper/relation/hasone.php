@@ -9,7 +9,7 @@ class DataMapper_Relation_HasOne extends DataMapper_Relation
 {
 	public function getAll()
 	{
-		$this->mapper->getAll();
+		return $this->mapper->getAll($this->conditions);
 	}
 
 	public function __isset($key)
@@ -19,7 +19,7 @@ class DataMapper_Relation_HasOne extends DataMapper_Relation
 		{
 			return false;
 		}
-		return isset($row->$key);
+		return isset($row[0]->$key);
 	}
 
 	public function __get($key)
@@ -27,7 +27,7 @@ class DataMapper_Relation_HasOne extends DataMapper_Relation
 		$row = $this->getResults();
 		if ($row)
 		{
-			return $row->$key;
+			return $row[0]->$key;
 		}
 		else
 		{
@@ -40,7 +40,7 @@ class DataMapper_Relation_HasOne extends DataMapper_Relation
 		$row = $this->getResults();
 		if ($row)
 		{
-			$row->$key = $value;
+			$row[0]->$key = $value;
 		}
 	}
 }

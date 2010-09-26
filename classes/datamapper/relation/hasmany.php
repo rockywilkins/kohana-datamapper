@@ -9,12 +9,12 @@ class DataMapper_Relation_HasMany extends DataMapper_Relation implements Countab
 {
 	public function getAll()
 	{
-		return $this->mapper->getAll();
+		return $this->mapper->getAll($this->conditions);
 	}
 
 	public function getOne()
 	{
-		return $this->mapper->getOne();
+		return $this->mapper->getOne($this->conditions);
 	}
 
 	public function count()
