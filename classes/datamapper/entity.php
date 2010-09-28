@@ -7,9 +7,9 @@
  */
 class DataMapper_Entity
 {
-	protected $loaded;
-	protected $data     = array();
-	protected $modified = array();
+	protected $_loaded;
+	protected $_data     = array();
+	protected $_modified = array();
 
 	public function __construct($data = null)
 	{
@@ -18,7 +18,7 @@ class DataMapper_Entity
 			$this->setData($data);
 		}
 
-		$this->loaded = true;
+		$this->_loaded = true;
 	}
 
 	/**
@@ -29,7 +29,7 @@ class DataMapper_Entity
 	 */
 	public function setLoaded($loaded = true)
 	{
-		$this->loaded = (bool) $loaded;
+		$this->_loaded = (bool) $loaded;
 	}
 
 //////////////////////////////
@@ -57,7 +57,7 @@ class DataMapper_Entity
 	 */
 	public function getData()
 	{
-		return array_merge($this->data, $this->modified);
+		return array_merge($this->_data, $this->_modified);
 	}
 
 	/**
@@ -67,7 +67,7 @@ class DataMapper_Entity
 	 */
 	public function getModifiedData()
 	{
-		return $this->modified;
+		return $this->_modified;
 	}
 
 	/**
@@ -94,13 +94,13 @@ class DataMapper_Entity
 	 */
 	public function __set($key, $value)
 	{
-		if ($this->loaded)
+		if ($this->_loaded)
 		{
-			$this->modified[$key] = $value;
+			$this->_modified[$key] = $value;
 		}
 		else
 		{
-			$this->data[$key] = $value;
+			$this->_data[$key] = $value;
 		}
 	}
 
@@ -109,13 +109,13 @@ class DataMapper_Entity
 	 */
 	public function __get($key)
 	{
-		if (array_key_exists($key, $this->modified))
+		if (array_key_exists($key, $this->_modified))
 		{
-			return $this->modified[$key];
+			return $this->_modified[$key];
 		}
-		else if (array_key_exists($key, $this->data))
+		else if (array_key_exists($key, $this->_data))
 		{
-			return $this->data[$key];
+			return $this->_data[$key];
 		}
 		else
 		{
