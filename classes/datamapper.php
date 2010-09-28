@@ -199,8 +199,8 @@ class DataMapper
 			}
 		}
 
-		// Return all the results as an array of entities
-		return $result->as_array();
+		// Return all the results
+		return $result;
 	}
 
 	/**
@@ -315,8 +315,7 @@ class DataMapper
 			if (count($data))
 			{
 				// Create the database query and execute
-				$query = DB::update($this->table);
-				$query->set($data);
+				$query = DB::update($this->table)->set($data)->where($this->getPrimaryKeyField(), '=', $this->getPrimaryKey($entity));
 				$result = $query->execute();
 
 				// Get the result
