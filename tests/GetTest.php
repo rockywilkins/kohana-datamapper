@@ -67,12 +67,28 @@ class GetTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testSave()
 	{
+		// Test update
 		$item = $this->mapper->get(5);
 		$item->title = 'Title 5 changed';
 		$this->mapper->save($item);
 
 		$item = $this->mapper->get(5);
 		$this->assertTrue($item->title == 'Title 5 changed');
+		
+		// Test update only changing one record
+		$item = $this->mapper->get(17);
+		$this->assertTrue($item->title == 'Title 17');
+
+		// Test insert
+		$item = $this->mapper->getEmpty();
+		$item->name = 'I am a test';
+		$item->title = 'I am a test';
+		$item->content = 'I am a test';
+		$this->mapper->save($item);
+		$this->assertTrue($item->id != null);
+
+		$item = $this->mapper->get($item->id);
+		$this->assertTrue($item->title == 'I am a test');
 	}
 
 	/**
@@ -133,6 +149,8 @@ class GetTest extends PHPUnit_Framework_TestCase
 
 		$imageMapper = DataMapper::instance('image');
 		$image = $imageMapper->getEmpty();
+		$image->test_id = $test->id;
+		$image->name = 'Image 1';
 		$test->images[] = $image;
 
 		$test->file_id = $file->id;
@@ -157,13 +175,13 @@ class Mapper_Test extends DataMapper
 
 	public $file = array(
 		'relation' => 'hasone',
-		'mapper'   => 'file',
+		'mapper'   => 'Mapper_File',
 		'where'    => array('id', '=', 'file_id')
 	);
 
 	public $images = array(
 		'relation' => 'hasmany',
-		'mapper'   => 'image',
+		'mapper'   => 'Mapper_Image',
 		'where'    => array('test_id', '=', 'id')
 	);
 }

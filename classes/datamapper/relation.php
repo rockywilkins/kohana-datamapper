@@ -36,7 +36,18 @@ abstract class DataMapper_Relation
 	 */
 	public function getConditions()
 	{
-		return $this->options['where'];
+		return $this->conditions;
+	}
+
+	/**
+	 * Set the conditions for this relation
+	 *
+	 * @param   array  conditions to set
+	 * @return  void
+	 */
+	public function setConditions($conditions)
+	{
+		$this->conditions = $conditions;
 	}
 
 	/**
@@ -48,7 +59,7 @@ abstract class DataMapper_Relation
 	{
 		if (!$this->results)
 		{
-			$this->results = $this->getAll();
+			$this->results = $this->getAll()->as_array();
 		}
 		return $this->results;
 	}

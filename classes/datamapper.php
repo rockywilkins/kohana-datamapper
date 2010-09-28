@@ -277,6 +277,16 @@ class DataMapper
 				// Get the result
 				$result = (bool)count($result);
 
+				// Update all the where values for relations
+				foreach ($this->relations as $name => $options)
+				{
+					if (isset($options['where']))
+					{
+						$where = $this->getRelationWhere($entity, $options['where']);
+						$entity->$name->setConditions($where);
+					}
+				}
+
 				// Save relations
 				if ($result)
 				{
@@ -415,6 +425,44 @@ class DataMapper
 	}
 
 	/**
+	 * Enter entity values into given where conditions
+	 *
+	 * @param   DataMapper_Entity  entity to get values from
+	 * @param   array  where conditions to use
+	 * @return  array
+	 */
+	public function getRelationWhere(DataMapper_Entity $entity, $where)
+	{
+		if (isset($where[0]))
+		{
+			if (is_array($where[0]))
+			{
+				// Array of arrays
+				foreach ($where as $condition)
+				{
+					$field        = $condition[2];
+					$condition[2] = $entity->$field;
+				}
+			}
+			else
+			{
+				// Single array
+				$field = $where[2];
+				$where[2] = $entity->$field;
+			}
+		}
+		else
+		{
+			// Associative array
+			foreach ($where as $field => $value)
+			{
+				$where[$field] = $entity->$value;
+			}
+		}
+		return $where;
+	}
+
+	/**
 	 * Load all related fields with relation classes
 	 *
 	 * @param   DataMapper_Entity  entity to load relations for
@@ -431,7 +479,7 @@ class DataMapper
 			{
 				throw new DataMapper_Exception('Relationship mapper for ' . $name . ' has not been defined');
 			}
-			$mapper = DataMapper::instance($mapper);
+			$mapper = new $mapper();
 
 			// Get relation class name
 			$relationClass = 'DataMapper_Relation_' . $options['relation'];
@@ -447,32 +495,7 @@ class DataMapper
 				$where = $options['where'];
 				unset($options['where']);
 
-				if (isset($where[0]))
-				{
-					if (is_array($where[0]))
-					{
-						// Array of arrays
-						foreach ($where as $condition)
-						{
-							$field        = $condition[2];
-							$condition[2] = $entity->$field;
-						}
-					}
-					else
-					{
-						// Single array
-						$field = $where[2];
-						$where[2] = $entity->$field;
-					}
-				}
-				else
-				{
-					// Associative array
-					foreach ($where as $field => $value)
-					{
-						$where[$field] = $entity->$value;
-					}
-				}
+				$where = $this->getRelationWhere($entity, $where);
 			}
 
 			// Create instance of relation
@@ -495,7 +518,7 @@ class DataMapper
 		{
 			$relation        = $entity->$name;
 			$relatedMapper   = $relation->getMapper();
-			$relatedEntities = $relation->getAll();
+			$relatedEntities = $relation->getResults();
 
 			// Save each related entity
 			foreach ($relatedEntities as $relatedEntity)
