@@ -146,7 +146,7 @@ class DataMapper
 	 * @param   Database_Query|array  where condition or database query
 	 * @return  DataMapper_Entity
 	 */
-	public function getOne($query)
+	public function getOne($query = array())
 	{
 		// Check if database query has been given
 		if (!$query instanceof Kohana_Database_Query)
@@ -178,7 +178,7 @@ class DataMapper
 	 * @param   Database_Query|array  where condition or database query
 	 * @return  Database_Result
 	 */
-	public function getAll($query = null)
+	public function getAll($query = array())
 	{
 		// Check if database query has been given
 		if (!$query instanceof Kohana_Database_Query)
