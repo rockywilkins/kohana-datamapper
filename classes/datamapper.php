@@ -7,6 +7,8 @@
  */
 class DataMapper
 {
+	protected static $instances = array();
+
 	protected $entityClass = 'DataMapper_Entity';
 	protected $fields      = array();
 	protected $relations   = array();
@@ -14,10 +16,20 @@ class DataMapper
 	protected $table;
 	protected $errors      = array();
 
+	/**
+	 * Return a single instance of a datamapper
+	 *
+	 * @param   string  name of the datamapper
+	 * @return  DataMapper
+	 */
 	public static function instance($mapperName)
 	{
-		$className = 'Mapper_' . $mapperName;
-		return new $className();
+		if (!isset(self::$instances[$mapperName]))
+		{
+			$className = 'Mapper_' . $mapperName;
+			self::$instances[$mapperName] = new $className();
+		}
+		return self::$instances[$mapperName];
 	}
 
 	public function __construct()
@@ -295,14 +307,15 @@ class DataMapper
 				if ($result)
 				{
 					$this->saveRelations($entity);
+					return $result;
 				}
 
-				return $result;
+				throw new DataMapper_Exception('Failed to insert record');
 			}
 		}
 
 		// Nothing got inserted
-		return false;
+		throw new DataMapper_Exception('No data to insert');
 	}
 
 	/**
@@ -335,14 +348,19 @@ class DataMapper
 				// Get the result
 				$result = (bool)count($result);
 
-				$this->saveRelations($entity);
+				// Save relations
+				if ($result)
+				{
+					$this->saveRelations($entity);
+					return $result;
+				}
 
-				return $result;
+				throw new DataMapper_Exception('Failed to update record');
 			}
 		}
 
+		// No data to update
 		return true;
-		throw new DataMapper_Exception('No data to update');
 	}
 
 	/**
