@@ -60,6 +60,11 @@ abstract class DataMapper_Relation
 		if (!$this->results)
 		{
 			$this->results = $this->getAll()->as_array();
+
+			foreach ($this->results as $result)
+			{
+				$this->mapper->loadRelations($result);
+			}
 		}
 		return $this->results;
 	}
