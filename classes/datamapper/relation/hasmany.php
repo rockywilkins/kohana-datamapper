@@ -25,7 +25,7 @@ class DataMapper_Relation_HasMany extends DataMapper_Relation implements Countab
 	public function getIterator()
 	{
 		$data = $this->getResults();
-		return $data ? $data : array();
+		return $data ? new ArrayObject($data) : new ArrayObject(array());
 	}
 
 
