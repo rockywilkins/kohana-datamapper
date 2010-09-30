@@ -109,6 +109,10 @@ class DataMapper
 	 */
 	public function getPrimaryKeyField()
 	{
+		if ($this->primaryKeyField === null)
+		{
+			throw new DataMapper_Exception('No primary key field set for ' . __CLASS__);
+		}
 		return $this->primaryKeyField;
 	}
 
