@@ -59,7 +59,7 @@ abstract class DataMapper_Relation
 	{
 		if (!$this->results)
 		{
-			$this->results = $this->getAll()->as_array();
+			$this->results = $this->getAll();
 
 			foreach ($this->results as $result)
 			{

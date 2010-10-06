@@ -204,9 +204,9 @@ class DataMapper
 		}
 		$query->from($this->table);            // Use the specified entity table
 		$query->as_object($this->entityClass); // Use the defined entity class
-		$result = $query->execute();           // Execute the query
+		$result = $query->execute()->as_array();           // Execute the query
 
-		if ($result->count() > 0)
+		if (count($result) > 0)
 		{
 			// Load the relations for each entity
 			foreach ($result as $entity)
