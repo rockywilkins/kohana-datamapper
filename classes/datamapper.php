@@ -394,6 +394,38 @@ class DataMapper
 	}
 
 	/**
+	 * Count records
+	 *
+	 * @param   Database_Query|array  where condition or database query
+	 * @return  int
+	 */
+	public function count($query)
+	{
+		// Check if database query has been given
+		if (!$query instanceof Kohana_Database_Query)
+		{
+			// Query not given so create one
+			$query = $this->createQuery($query);
+		}
+		$query->select(DB::expr('COUNT(*) as count'));
+		$query->from($this->table);            // Use the specified entity table
+		$query->limit(1);                      // Limit to only 1 record
+		$result = $query->execute();           // Execute the query
+
+		// Did we get a result?
+		if ($result->count() === 0)
+		{
+			// No result
+			return false;
+		}
+		else
+		{
+			// Return the count value
+			return $result->get('count');
+		}
+	}
+
+	/**
 	 * Create a database query from where conditions
 	 *
 	 * @param   array  where conditions
