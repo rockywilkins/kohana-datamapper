@@ -43,4 +43,13 @@ class DataMapper_Relation_HasOne extends DataMapper_Relation
 			$row[0]->$key = $value;
 		}
 	}
+
+	public function __call($name, $arguments)
+	{
+		$row = $this->getResults();
+		if ($row)
+		{
+			return call_user_func_array(array($row[0], $name), $arguments);
+		}
+	}
 }
