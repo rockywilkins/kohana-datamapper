@@ -431,7 +431,7 @@ class DataMapper
 	 * @param   array  where conditions
 	 * @return  Database_Query_Builder_Select
 	 */
-	protected function createQuery(array $conditions)
+	public function createQuery(array $conditions)
 	{
 		// Create new query
 		$query = DB::select();

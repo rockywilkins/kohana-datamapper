@@ -9,7 +9,17 @@ class DataMapper_Relation_HasMany extends DataMapper_Relation implements Countab
 {
 	public function getAll()
 	{
-		return $this->mapper->getAll($this->conditions);
+		// Check if relation has the order field set
+		if (isset($this->options['order']))
+		{
+			$where = $this->mapper->createQuery($this->conditions);
+			$where->order_by($this->options['order']);
+		}
+		else
+		{
+			$where = $this->conditions;
+		}
+		return $this->mapper->getAll($where);
 	}
 
 	public function getOne()
