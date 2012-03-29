@@ -168,7 +168,7 @@ class DataMapper
 		if (!$query instanceof Kohana_Database_Query)
 		{
 			// Query not given so create one
-			$query = $this->createQuery($query);
+			$query = $this->populateWhere(DB::select(), $query);
 		}
 		$query->from($this->table);            // Use the specified entity table
 		$query->limit(1);                      // Limit to only 1 record
@@ -200,7 +200,7 @@ class DataMapper
 		if (!$query instanceof Kohana_Database_Query)
 		{
 			// Query not given so create one
-			$query = $this->createQuery($query);
+			$query = $this->populateWhere(DB::select(), $query);
 		}
 		$query->from($this->table);            // Use the specified entity table
 		$query->as_object($this->entityClass); // Use the defined entity class
@@ -366,31 +366,42 @@ class DataMapper
 	/**
 	 * Delete records
 	 *
-	 * @param   DataMapper_Entity|array  entity to delete or condition to match
-	 * @return  bool
+	 * @param   Database_Query_Builder_Delete|DataMapper_Entity|array  entity to delete or condition to match
+	 * @return  int
+	 * @throws  InvalidArgumentException
 	 */
 	public function delete($condition)
 	{
-		// Create the database query
-		$query = DB::delete($this->table);
-
-		if ($condition instanceof DataMapper_Entity)
+		// Check if database query has been given
+		if ($condition instanceof Database_Query_Builder_Delete)
 		{
-			// Use the primary key field and value
-			$query->where($this->getPrimaryKeyField(), '=', $this->getPrimaryKey($condition));
-		}
-		else if (is_array($condition))
-		{
-			// Use the specified where condition
-			$query->where($condition[0], $condition[1], $condition[2]);
+			$query = $condition;
 		}
 		else
 		{
-			throw new InvalidArgumentException('Argument must be instance of DataMapper_Entity or an array');
+			// Query not given so create one
+			$query = DB::delete();
+
+			if ($condition instanceof DataMapper_Entity)
+			{
+				// Use the primary key field and value
+				$query->where($this->getPrimaryKeyField(), '=', $this->getPrimaryKey($condition));
+			}
+			else if (is_array($condition))
+			{
+				// Use the specified where condition
+				$query = $this->populateWhere($query, $condition);
+			}
+			else
+			{
+				throw new InvalidArgumentException('Argument must be instance of Database_Query_Builder_Delete, DataMapper_Entity or an array');
+			}
 		}
 
+		$query->table($this->table);
+
 		// Execute the query
-		return (bool)$query->execute();
+		return $query->execute();
 	}
 
 	/**
@@ -405,7 +416,7 @@ class DataMapper
 		if (!$query instanceof Kohana_Database_Query)
 		{
 			// Query not given so create one
-			$query = $this->createQuery($query);
+			$query = $this->populateWhere(DB::select(), $query);
 		}
 		$query->select(DB::expr('COUNT(*) as count'));
 		$query->from($this->table);            // Use the specified entity table
@@ -426,16 +437,14 @@ class DataMapper
 	}
 
 	/**
-	 * Create a database query from where conditions
+	 * Populate where object from an array of where conditions
 	 *
-	 * @param   array  where conditions
-	 * @return  Database_Query_Builder_Select
+	 * @param   Database_Query_Builder_Where  where object
+	 * @param   array                         where conditions
+	 * @return  Database_Query_Builder_Where
 	 */
-	public function createQuery(array $conditions)
+	public function populateWhere(Database_Query_Builder_Where $where, array $conditions)
 	{
-		// Create new query
-		$query = DB::select();
-
 		if (isset($conditions[0]))
 		{
 			if (is_array($conditions[0]))
@@ -443,13 +452,13 @@ class DataMapper
 				// Array of arrays
 				foreach ($conditions as $condition)
 				{
-					$query->where($condition[0], $condition[1], $condition[2]);
+					$where->where($condition[0], $condition[1], $condition[2]);
 				}
 			}
 			else
 			{
 				// Single array
-				$query->where($conditions[0], $conditions[1], $conditions[2]);
+				$where->where($conditions[0], $conditions[1], $conditions[2]);
 			}
 		}
 		else
@@ -457,11 +466,11 @@ class DataMapper
 			// Associative array
 			foreach ($conditions as $field => $value)
 			{
-				$query->where($field, '=', $value);
+				$where->where($field, '=', $value);
 			}
 		}
 
-		return $query;
+		return $where;
 	}
 
 //////////////////////////////

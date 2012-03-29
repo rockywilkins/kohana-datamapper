@@ -12,7 +12,7 @@ class DataMapper_Relation_HasMany extends DataMapper_Relation implements Countab
 		// Check if relation has the order field set
 		if (isset($this->options['order']))
 		{
-			$where = $this->mapper->createQuery($this->conditions);
+			$where = $this->mapper->populateWhere(DB::select(), $this->conditions);
 			$where->order_by($this->options['order']);
 		}
 		else
