@@ -53,11 +53,12 @@ abstract class DataMapper_Relation
 	/**
 	 * Get the database results for this relation
 	 *
+	 * @param   bool   force the results to be reloaded
 	 * @return  array
 	 */
-	public function getResults()
+	public function getResults($forceReload = false)
 	{
-		if (!$this->results)
+		if ($forceReload || !$this->results)
 		{
 			$this->results = $this->getAll();
 
